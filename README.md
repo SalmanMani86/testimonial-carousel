@@ -7,7 +7,7 @@ A clean, modern, responsive testimonial carousel built with **vanilla HTML, CSS 
 ## Features
 
 - 🎠 **Smooth slider** with polished easing transitions
-- ⏯️ **Auto-scroll** (every 5s) — pauses on hover and when the tab is hidden
+- ⏯️ **Auto-scroll** (every 3s) — pauses on hover and when the tab is hidden
 - 🖱️ **Manual navigation** — arrows, dots, swipe gestures, and ← / → keyboard keys
 - 🌓 **Light / dark mode** — toggle button, remembers your choice, respects OS preference
 - 👤 **Full testimonial fields** — customer name, role, company, and quote
