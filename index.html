@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  // Set theme before paint to avoid a flash. Priority: saved choice > OS preference > dark.
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    var prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    var theme = saved || (prefersLight ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Testimonial Carousel — Demo</title>
+<meta name="description" content="A clean, responsive, high-performance testimonial carousel demo." />
+<style>
+  :root {
+    --radius: 18px;
+    --transition: 650ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  /* Dark theme (default) */
+  html[data-theme="dark"] {
+    --bg: #0f1115;
+    --bg-glow: #1b2030;
+    --surface: #1a1d24;
+    --surface-2: #20242d;
+    --text: #e8eaed;
+    --muted: #9aa0aa;
+    --accent: #6c8cff;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(255, 255, 255, 0.12);
+    --dot: rgba(255, 255, 255, 0.22);
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Light theme */
+  html[data-theme="light"] {
+    --bg: #f4f6fb;
+    --bg-glow: #e6ecfa;
+    --surface: #ffffff;
+    --surface-2: #f6f8fc;
+    --text: #1a1d24;
+    --muted: #5d6470;
+    --accent: #4163e0;
+    --border: rgba(0, 0, 0, 0.07);
+    --border-strong: rgba(0, 0, 0, 0.12);
+    --dot: rgba(0, 0, 0, 0.18);
+    --shadow: 0 10px 36px rgba(40, 60, 120, 0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, var(--bg-glow) 0%, var(--bg) 60%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    -webkit-font-smoothing: antialiased;
+    transition: background 350ms ease, color 350ms ease;
+  }
+
+  .intro {
+    text-align: center;
+    margin-bottom: 40px;
+    max-width: 600px;
+  }
+  .intro .eyebrow {
+    color: var(--accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .intro h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .intro p { color: var(--muted); font-size: 1rem; line-height: 1.6; }
+
+  /* ---------- Carousel ---------- */
+  .carousel {
+    width: 100%;
+    max-width: 720px;
+    position: relative;
+  }
+
+  .viewport {
+    overflow: hidden;
+    border-radius: var(--radius);
+  }
+
+  .track {
+    display: flex;
+    transition: transform var(--transition);
+    will-change: transform;
+  }
+
+  .slide {
+    min-width: 100%;
+    padding: 4px;
+  }
+
+  .card {
+    background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 44px 40px;
+    transition: background 350ms ease, border-color 350ms ease;
+  }
+
+  .quote-mark {
+    font-size: 4rem;
+    line-height: 0.6;
+    color: var(--accent);
+    opacity: 0.35;
+    font-family: Georgia, serif;
+    height: 32px;
+  }
+
+  .quote {
+    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+    line-height: 1.65;
+    margin: 14px 0 28px;
+    color: var(--text);
+  }
+
+  .author { display: flex; align-items: center; gap: 16px; }
+
+  .avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #fff;
+    letter-spacing: 0.02em;
+  }
+
+  .author-meta .name { font-weight: 700; font-size: 1rem; }
+  .author-meta .role { color: var(--muted); font-size: 0.88rem; margin-top: 2px; }
+  .author-meta .role .company { color: var(--accent); font-weight: 600; }
+
+  /* ---------- Controls ---------- */
+  .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow);
+    transition: background 200ms, transform 200ms, border-color 200ms, color 200ms;
+    z-index: 2;
+  }
+  .arrow:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .arrow:active { transform: translateY(-50%) scale(0.92); }
+  .arrow.prev { left: -22px; }
+  .arrow.next { right: -22px; }
+  .arrow svg { width: 18px; height: 18px; }
+
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 26px;
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: none;
+    background: var(--dot);
+    cursor: pointer;
+    padding: 0;
+    transition: background 250ms, width 250ms;
+  }
+  .dot.active { background: var(--accent); width: 26px; border-radius: 6px; }
+
+  .footer-note {
+    margin-top: 40px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    text-align: center;
+  }
+  .footer-note kbd {
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: 0.78rem;
+  }
+
+  /* ---------- Theme toggle ---------- */
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow);
+    transition: background 200ms, transform 200ms, border-color 200ms;
+    z-index: 10;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+  .theme-toggle:active { transform: scale(0.92); }
+  .theme-toggle svg { width: 20px; height: 20px; }
+  /* Show the correct icon per theme */
+  html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+  html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  html[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+  html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
+  @media (max-width: 600px) {
+    .arrow.prev { left: 8px; }
+    .arrow.next { right: 8px; }
+    .card { padding: 34px 26px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark theme">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+  </button>
+
+  <div class="intro">
+    <div class="eyebrow">What our customers say</div>
+    <h1>Trusted by teams worldwide</h1>
+    <p>A clean, responsive testimonial carousel — auto-scroll, manual navigation, swipe support, and built for speed.</p>
+  </div>
+
+  <div class="carousel" id="carousel" aria-roledescription="carousel" aria-label="Customer testimonials">
+    <button class="arrow prev" id="prev" aria-label="Previous testimonial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+
+    <div class="viewport">
+      <div class="track" id="track"></div>
+    </div>
+
+    <button class="arrow next" id="next" aria-label="Next testimonial">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+
+    <div class="dots" id="dots" role="tablist" aria-label="Choose testimonial"></div>
+  </div>
+
+  <p class="footer-note">
+    Auto-scrolls every 5s · pauses on hover · navigate with arrows, dots, swipe, or <kbd>←</kbd> <kbd>→</kbd>
+  </p>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Data: each testimonial supports name, role, company, text ----
+  var testimonials = [
+    {
+      text: "The new carousel transformed how visitors engage with our social proof. Conversions on the landing page jumped noticeably within the first week.",
+      name: "Sarah Mitchell",
+      role: "Head of Marketing",
+      company: "Brightpath Co.",
+      color: "#6c8cff"
+    },
+    {
+      text: "Clean, fast, and exactly what we asked for. It works flawlessly across every device we tested and didn't add any noticeable weight to our page.",
+      name: "David Chen",
+      role: "Product Manager",
+      company: "Northwind Labs",
+      color: "#e07a5f"
+    },
+    {
+      text: "Professional from start to finish. The component dropped straight into our site and the auto-scroll plus swipe gestures feel premium.",
+      name: "Amara Okafor",
+      role: "Founder & CEO",
+      company: "Lumen Studio",
+      color: "#3aafa9"
+    },
+    {
+      text: "We'd struggled to make testimonials look good for ages. This finally nailed the clean, modern feel we were after — and it loads instantly.",
+      name: "Jonas Berg",
+      role: "Creative Director",
+      company: "Atlas Media",
+      color: "#c084fc"
+    }
+  ];
+
+  // ---- Theme toggle ----
+  document.getElementById("themeToggle").addEventListener("click", function () {
+    var current = document.documentElement.getAttribute("data-theme");
+    var nextTheme = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    try { localStorage.setItem("theme", nextTheme); } catch (e) {}
+  });
+
+  var track = document.getElementById("track");
+  var dotsWrap = document.getElementById("dots");
+  var carousel = document.getElementById("carousel");
+  var index = 0;
+  var timer = null;
+  var AUTOPLAY_MS = 5000;
+
+  function initials(name) {
+    return name.split(" ").map(function (w) { return w[0]; }).slice(0, 2).join("").toUpperCase();
+  }
+
+  // ---- Build slides + dots ----
+  testimonials.forEach(function (t, i) {
+    var slide = document.createElement("div");
+    slide.className = "slide";
+    slide.setAttribute("role", "tabpanel");
+    slide.setAttribute("aria-label", (i + 1) + " of " + testimonials.length);
+    slide.innerHTML =
+      '<div class="card">' +
+        '<div class="quote-mark">&ldquo;</div>' +
+        '<p class="quote">' + t.text + '</p>' +
+        '<div class="author">' +
+          '<div class="avatar" style="background:' + t.color + '">' + initials(t.name) + '</div>' +
+          '<div class="author-meta">' +
+            '<div class="name">' + t.name + '</div>' +
+            '<div class="role">' + t.role + ' · <span class="company">' + t.company + '</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    track.appendChild(slide);
+
+    var dot = document.createElement("button");
+    dot.className = "dot" + (i === 0 ? " active" : "");
+    dot.setAttribute("role", "tab");
+    dot.setAttribute("aria-label", "Go to testimonial " + (i + 1));
+    dot.addEventListener("click", function () { goTo(i, true); });
+    dotsWrap.appendChild(dot);
+  });
+
+  var dots = dotsWrap.querySelectorAll(".dot");
+
+  function render() {
+    track.style.transform = "translateX(-" + index * 100 + "%)";
+    dots.forEach(function (d, i) { d.classList.toggle("active", i === index); });
+  }
+
+  function goTo(i, fromUser) {
+    index = (i + testimonials.length) % testimonials.length;
+    render();
+    if (fromUser) restart();
+  }
+
+  function next(fromUser) { goTo(index + 1, fromUser); }
+  function prev(fromUser) { goTo(index - 1, fromUser); }
+
+  // ---- Autoplay (pauses on hover / when tab hidden) ----
+  function start() { timer = setInterval(function () { next(false); }, AUTOPLAY_MS); }
+  function stop() { clearInterval(timer); timer = null; }
+  function restart() { stop(); start(); }
+
+  document.getElementById("next").addEventListener("click", function () { next(true); });
+  document.getElementById("prev").addEventListener("click", function () { prev(true); });
+
+  carousel.addEventListener("mouseenter", stop);
+  carousel.addEventListener("mouseleave", start);
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) { stop(); } else { start(); }
+  });
+
+  // ---- Keyboard ----
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight") next(true);
+    else if (e.key === "ArrowLeft") prev(true);
+  });
+
+  // ---- Touch / swipe ----
+  var startX = 0, isDown = false;
+  track.addEventListener("touchstart", function (e) { startX = e.touches[0].clientX; isDown = true; stop(); }, { passive: true });
+  track.addEventListener("touchend", function (e) {
+    if (!isDown) return;
+    isDown = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) { dx < 0 ? next(true) : prev(true); }
+    else { start(); }
+  });
+
+  render();
+  start();
+})();
+</script>
+</body>
+</html>
