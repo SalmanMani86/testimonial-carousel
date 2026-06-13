@@ -385,9 +385,11 @@
   function prev(fromUser) { goTo(index - 1, fromUser); }
 
   // ---- Autoplay (pauses on hover / when tab hidden) ----
-  function start() { timer = setInterval(function () { next(false); }, AUTOPLAY_MS); }
+  // start() always clears any existing timer first, so overlapping events
+  // (hover + tab visibility, etc.) can never stack multiple intervals.
+  function start() { stop(); timer = setInterval(function () { next(false); }, AUTOPLAY_MS); }
   function stop() { clearInterval(timer); timer = null; }
-  function restart() { stop(); start(); }
+  function restart() { start(); }
 
   document.getElementById("next").addEventListener("click", function () { next(true); });
   document.getElementById("prev").addEventListener("click", function () { prev(true); });
