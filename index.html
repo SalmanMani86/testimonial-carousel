@@ -108,9 +108,14 @@
   .slide {
     min-width: 100%;
     padding: 4px;
+    display: flex;
   }
 
   .card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%);
     border: 1px solid var(--border);
     border-radius: var(--radius);
